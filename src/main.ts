@@ -14,19 +14,19 @@ async function bootstrap() {
   app.enableCors();
 
   // Configurar servir archivos estáticos desde la carpeta uploads, MAQUINA LOCAL
-  //app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-  // prefix: '/uploads/'
-  //});
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+   prefix: '/uploads/'
+  });
 
   // Configurar archivos estáticos desde la carpeta uploads DESPLIEGUE
-  app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
+  //app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
 
   //en local
-  //await app.listen(puerto, () => {
-  // console.log(`Servidor funcionando puerto: ${puerto}`);
-  // });
+  await app.listen(puerto, () => {
+   console.log(`Servidor funcionando puerto: ${puerto}`);
+   });
 
   //despliegue
-  await app.init();
+ // await app.init();
 }
 bootstrap();
