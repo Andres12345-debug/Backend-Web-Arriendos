@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { Acceso } from 'src/modelos/acceso/acceso';
 import { AccesosService } from './accesos.service';
 
@@ -10,4 +10,5 @@ export class AccesosController {
     public inicioSesion(@Body() objAcceso:Acceso):any{
         return this.accesoService.sesion(objAcceso);
     }
+      
 }

@@ -6,6 +6,7 @@ import { AccesosService } from './accesos/accesos.service';
 import { AccesosController } from './accesos/accesos.controller';
 import { RegistrosService } from './registros/registros.service';
 import { RegistrosController } from './registros/registros.controller';
+import { PublicacionListarModule } from './publicacion/publicacionListar.module';
 
 
 
@@ -14,13 +15,15 @@ const routes:Routes=[
         path:"public",
         children:[
             AccesosModule,
-            RegistrosModule
+            RegistrosModule,
+            PublicacionListarModule
         ]
     }
 ]
 
 @Module({
     imports:[
+        PublicacionListarModule,
         RouterModule.register(routes), AccesosModule, RegistrosModule],
         exports: [RouterModule],
         providers: [AccesosService, RegistrosService],
