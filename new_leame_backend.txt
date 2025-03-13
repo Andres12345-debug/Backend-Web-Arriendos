@@ -170,3 +170,6 @@ REgister va si o si
   ],
   exports: [RouterModule],
 })
+
+Ejecutar proyecto
+nest start --watch
