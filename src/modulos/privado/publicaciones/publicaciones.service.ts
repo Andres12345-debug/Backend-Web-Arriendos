@@ -66,6 +66,8 @@ export class PublicacionesService {
     }
   }
 
+  
+
   public async actualizar(objPubli: Publicacion, codigo: number, imagenUrl?: string): Promise<any> {
     try {
       // Obtener la publicación existente
@@ -86,6 +88,8 @@ export class PublicacionesService {
       if (objPubli.metros) datosActualizacion.metros = objPubli.metros;
       if (objPubli.habitaciones) datosActualizacion.habitaciones = objPubli.habitaciones;
       if (objPubli.banios) datosActualizacion.banios = objPubli.banios;
+
+      if (objPubli.tipo) datosActualizacion.tipo = objPubli.tipo; //Actualizar TIPO DE CASA
 
 
       if (objPubli.contenidoPublicacion) datosActualizacion.contenidoPublicacion = objPubli.contenidoPublicacion;
