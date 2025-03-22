@@ -3,16 +3,19 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Acceso } from '../acceso/acceso';
 import { Usuario } from '../usuario/usuario';
+import { ImagenesPublicaciones } from '../imagenes_publicacion/ImagenesPublicacion';
 
 export enum TipoVivienda {
   CASA = 'Casa',
   APARTAMENTO = 'Apartamento',
   FINCA = 'Finca',
+  HABITACION = 'Habitacion',
 }
 
 @Entity('publicaciones', { schema: 'public' })
@@ -77,5 +80,12 @@ export class Publicacion {
   //Enum para tipo de vivienda
   @Column({ type: 'enum', enum: TipoVivienda, default: TipoVivienda.CASA })
   tipo: TipoVivienda;
+
+
+  //Recibo de imagen
+// Relación con imágenes de publicaciones
+@OneToMany(() => ImagenesPublicaciones, (imagen) => imagen.publicacion)
+public imagenes?: ImagenesPublicaciones[];
+  
 
 }

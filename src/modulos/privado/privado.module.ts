@@ -5,11 +5,12 @@ import { PublicoModule } from '../publico/publico.module';
 import { RolesModule } from './roles/roles.module';
 import { Publicacion } from 'src/modelos/publicacion/publicacion';
 import { PublicacionesModule } from './publicaciones/publicaciones.module';
+import { ImagenesModule } from './imagenes/imagenes.module';
 
 const routes: Routes = [
     {
       path: 'privado',
-      children: [UsuariosModule, PublicoModule, RolesModule, PublicacionesModule],
+      children: [UsuariosModule, PublicoModule, RolesModule, PublicacionesModule, ImagenesModule],
     },
   ];
 
@@ -19,7 +20,8 @@ const routes: Routes = [
         PublicoModule,
         RolesModule,
         RouterModule.register(routes),
-        PublicacionesModule       
+        PublicacionesModule,
+        ImagenesModule       
         ],
       exports: [RouterModule],
 })

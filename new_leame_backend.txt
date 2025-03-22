@@ -57,6 +57,11 @@
     nest g s modulos/privado/facultad --no-spec
     nest g co modulos/privado/facultad --no-spec
 
+    
+    nest g mo modulos/privado/imagenes
+    nest g s modulos/privado/imagenes --no-spec
+    nest g co modulos/privado/imagenes --no-spec
+
 nest g mo modulos/privado/usuarioMateria
     nest g s modulos/privado/usuarioMateria --no-spec
     nest g co modulos/privado/usuarioMateria --no-spec
