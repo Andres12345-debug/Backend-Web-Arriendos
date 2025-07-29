@@ -22,7 +22,7 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
             port: Number(process.env.PORT),
             username: String(process.env.DB_USER),
             password: String(process.env.DB_PASSWORD),
-            database: String(process.env.DB_HOST),
+            database: String(process.env.DB_NAME),
             synchronize: true,
             logging: true,
             namingStrategy: new SnakeNamingStrategy(),
