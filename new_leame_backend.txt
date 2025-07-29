@@ -24,6 +24,8 @@
 ### privados  ######
 
     nest g mo modulos/privado
+
+    nest g mo modulos/privado
     nest g mo modulos/privado/usuarios
     nest g s modulos/privado/usuarios --no-spec
     nest g co modulos/privado/usuarios --no-spec
@@ -62,7 +64,7 @@
     nest g s modulos/privado/imagenes --no-spec
     nest g co modulos/privado/imagenes --no-spec
 
-nest g mo modulos/privado/usuarioMateria
+    nest g mo modulos/privado/usuarioMateria
     nest g s modulos/privado/usuarioMateria --no-spec
     nest g co modulos/privado/usuarioMateria --no-spec
 
@@ -158,7 +160,7 @@ nest g module config/conexion
 
 
 ## Al empezar para las rutas del privado y publico ##
-const roues: Routes = [
+const routes: Routes = [
 {
   path: 'privado',
   children: [UsuariosModule, MateriasModule]
