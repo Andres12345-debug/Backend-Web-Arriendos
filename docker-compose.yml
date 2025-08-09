@@ -19,7 +19,5 @@ services:
       - POSTGRES_DB=bd_arriendos    # ✅ debe coincidir con .env
     volumes:
       - pgdata:/var/lib/postgresql/data
-   
-
 volumes:
   pgdata:
