@@ -42,8 +42,6 @@ export class Publicacion {
   })
   public contenidoPublicacion: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: false, name: 'imagen_url' })
-  public imagenUrl: string;
 
   @Column({ type: 'integer', name: 'parqueadero' })
   public parqueadero: number;
@@ -87,5 +85,4 @@ export class Publicacion {
 @OneToMany(() => ImagenesPublicaciones, (imagen) => imagen.publicacion)
 public imagenes?: ImagenesPublicaciones[];
   
-
 }

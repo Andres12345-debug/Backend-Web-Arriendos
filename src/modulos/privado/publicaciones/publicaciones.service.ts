@@ -1,4 +1,5 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { ImagenesPublicaciones } from 'src/modelos/imagenes_publicacion/ImagenesPublicacion';
 import { Publicacion } from 'src/modelos/publicacion/publicacion';
 import { DataSource, Repository } from 'typeorm';
 
@@ -11,111 +12,139 @@ export class PublicacionesService {
   }
 
   public async consultar(): Promise<any> {
-    try {
-      return this.publicacionesRepository.find();
-    } catch (error) {
-      throw new HttpException(
-        'Fallo al consultar las publicaciones',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  try {
+    const publicaciones = await this.publicacionesRepository.find({
+      relations: ['imagenes'], // Asegúrate de usar el nombre real de la relación
+    });
+
+    return publicaciones.map(publi => ({
+      ...publi,
+      imagenesUrls: publi.imagenes?.map(img => img.urlImagen) || [],
+      imagenUrl: publi.imagenes?.[0]?.urlImagen || null,
+    }));
+  } catch (error) {
+    throw new HttpException(
+      'Fallo al consultar las publicaciones',
+      HttpStatus.BAD_REQUEST,
+    );
   }
+}
+
+
 
   public async verificar(nombre: string): Promise<boolean> {
     const existe = await this.publicacionesRepository.findBy({ tituloPublicacion: nombre });
     return existe.length > 0;
   }
 
-  public async registrar(objPubli: Publicacion, imagenUrl: string): Promise<any> {
-    try {
-      // Normalizar el título de la publicación
-      objPubli.tituloPublicacion = objPubli.tituloPublicacion.trim().toLowerCase();
 
-      // Verificar si la publicación ya existe
-      if (await this.verificar(objPubli.tituloPublicacion)) {
-        throw new HttpException('La publicación ya existe', HttpStatus.BAD_REQUEST);
-      }
+public async registrar(objPubli: Publicacion, imagenesUrls: string | string[]): Promise<any> {
+  const urls = Array.isArray(imagenesUrls) ? imagenesUrls : [imagenesUrls];
+  try {
+    objPubli.tituloPublicacion = objPubli.tituloPublicacion.trim().toLowerCase();
 
-      // Asociar la URL de la imagen al objeto
-      objPubli.imagenUrl = imagenUrl;
-
-      // Guardar la publicación
-      const publicacionGuardada = await this.publicacionesRepository.save(objPubli);
-
-      return {
-        success: true,
-        message: 'La publicación fue registrada correctamente.',
-        data: publicacionGuardada,
-      };
-    } catch (error) {
-      throw new HttpException(
-        {
-          success: false,
-          message: error.message || 'Fallo al registrar la publicación.',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+    if (await this.verificar(objPubli.tituloPublicacion)) {
+      throw new HttpException('La publicación ya existe', HttpStatus.BAD_REQUEST);
     }
+
+    // Fecha de creación
+    objPubli.fechaCreacionPublicacion = new Date();
+
+    // Guardar publicación base
+    const publicacionGuardada = await this.publicacionesRepository.save(objPubli);
+
+    // Guardar imágenes relacionadas
+    if (urls && urls.length > 0) {
+      const imagenesRepo = this.poolConexion.getRepository(ImagenesPublicaciones);
+      const imagenesEntities = urls.map(url => {
+        const img = new ImagenesPublicaciones();
+        img.urlImagen = url;
+        img.publicacion = publicacionGuardada;
+        return img;
+      });
+      await imagenesRepo.save(imagenesEntities);
+    }
+
+    return {
+      success: true,
+      message: 'La publicación fue registrada correctamente.',
+      data: publicacionGuardada,
+    };
+  } catch (error) {
+    throw new HttpException(
+      { success: false, message: error.message || 'Fallo al registrar la publicación.' },
+      HttpStatus.BAD_REQUEST,
+    );
   }
+}
 
   public async consultarUno(codigo: number): Promise<any> {
-    try {
-      return this.publicacionesRepository.findBy({ codPublicacion: codigo });
-    } catch (error) {
-      throw new HttpException('Fallo al consultar la publicación', HttpStatus.BAD_REQUEST);
+  try {
+    const publi = await this.publicacionesRepository.findOne({
+      where: { codPublicacion: codigo },
+      relations: ['imagenes'], // Asegúrate de que 'imagenes' es el nombre de la relación en tu entidad
+    });
+
+    if (!publi) {
+      throw new HttpException('Publicación no encontrada', HttpStatus.NOT_FOUND);
     }
+
+    return {
+      ...publi,
+      imagenesUrls: publi.imagenes?.map(img => img.urlImagen) || [],
+      imagenUrl: publi.imagenes?.[0]?.urlImagen || null
+    };
+  } catch (error) {
+    throw new HttpException(
+      'Fallo al consultar la publicación',
+      HttpStatus.BAD_REQUEST
+    );
   }
+}
+
 
   
 
-  public async actualizar(objPubli: Publicacion, codigo: number, imagenUrl?: string): Promise<any> {
-    try {
-      // Obtener la publicación existente
-      const publicacionExistente = await this.publicacionesRepository.findOneBy({ codPublicacion: codigo });
-  
-      if (!publicacionExistente) {
-        throw new HttpException("La publicación no existe", HttpStatus.NOT_FOUND);
-      }
-  
-      // Crear un objeto de actualización con solo los campos que se van a modificar
-      const datosActualizacion: Partial<Publicacion> = {};
-      
-      if (objPubli.tituloPublicacion) datosActualizacion.tituloPublicacion = objPubli.tituloPublicacion;
-      if (objPubli.parqueadero) datosActualizacion.parqueadero = objPubli.parqueadero;
-      if (objPubli.estrato) datosActualizacion.estrato = objPubli.estrato;
-      if (objPubli.servicios) datosActualizacion.servicios = objPubli.servicios;
-      if (objPubli.administracion) datosActualizacion.administracion = objPubli.administracion;
-      if (objPubli.metros) datosActualizacion.metros = objPubli.metros;
-      if (objPubli.habitaciones) datosActualizacion.habitaciones = objPubli.habitaciones;
-      if (objPubli.banios) datosActualizacion.banios = objPubli.banios;
+  public async actualizar(objPubli: Publicacion, codigo: number, imagenesUrls?: string[]): Promise<any> {
+  try {
+    const publicacionExistente = await this.publicacionesRepository.findOne({
+      where: { codPublicacion: codigo },
+      relations: ['imagenes'],
+    });
 
-      if (objPubli.tipo) datosActualizacion.tipo = objPubli.tipo; //Actualizar TIPO DE CASA
-
-
-      if (objPubli.contenidoPublicacion) datosActualizacion.contenidoPublicacion = objPubli.contenidoPublicacion;
-      if (imagenUrl) datosActualizacion.imagenUrl = imagenUrl;
-  
-      const resultado = await this.publicacionesRepository.update(
-        { codPublicacion: codigo }, 
-        datosActualizacion
-      );
-  
-      if (resultado.affected && resultado.affected > 0) {
-        const publicacionActualizada = await this.publicacionesRepository.findOneBy({ codPublicacion: codigo });
-        return { 
-          mensaje: "Publicacion actualizada", 
-          objeto: publicacionActualizada 
-        };
-      } else {
-        throw new HttpException("No se pudo actualizar la publicación", HttpStatus.BAD_REQUEST);
-      }
-    } catch (error) {
-      throw new HttpException(
-        error.message || "Fallo al actualizar la publicación",
-        error.status || HttpStatus.BAD_REQUEST,
-      );
+    if (!publicacionExistente) {
+      throw new HttpException("La publicación no existe", HttpStatus.NOT_FOUND);
     }
+
+    // Actualizar datos básicos
+    await this.publicacionesRepository.update({ codPublicacion: codigo }, objPubli);
+
+    // Si hay nuevas imágenes, agregarlas
+    if (imagenesUrls && imagenesUrls.length > 0) {
+      const imagenesRepo = this.poolConexion.getRepository(ImagenesPublicaciones);
+      const nuevasImagenes = imagenesUrls.map(url => {
+        const img = new ImagenesPublicaciones();
+        img.urlImagen = url;
+        img.publicacion = publicacionExistente;
+        return img;
+      });
+      await imagenesRepo.save(nuevasImagenes);
+    }
+
+    const actualizada = await this.publicacionesRepository.findOne({
+      where: { codPublicacion: codigo },
+      relations: ['imagenes'],
+    });
+
+    return { mensaje: "Publicación actualizada", objeto: actualizada };
+  } catch (error) {
+    throw new HttpException(
+      error.message || "Fallo al actualizar la publicación",
+      error.status || HttpStatus.BAD_REQUEST,
+    );
   }
+}
+
 
   public async eliminar(codigo: number): Promise<any> {
     try {

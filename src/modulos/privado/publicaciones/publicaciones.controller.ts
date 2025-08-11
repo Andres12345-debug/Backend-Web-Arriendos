@@ -9,9 +9,10 @@ import {
   Post,
   Put,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { PublicacionesService } from './publicaciones.service';
 import { Publicacion } from 'src/modelos/publicacion/publicacion';
@@ -19,7 +20,7 @@ import { Query } from '@nestjs/common';
 
 @Controller('publicaciones')
 export class PublicacionesController {
-  constructor(private readonly publicacionService: PublicacionesService) {}
+  constructor(private readonly publicacionService: PublicacionesService) { }
 
   @Get('/todos')
   public obtenerProductos(): any {
@@ -28,17 +29,25 @@ export class PublicacionesController {
 
   @Post('/agregar')
   @UseInterceptors(
-    FileInterceptor('imagen', {
+    FilesInterceptor('imagenes', 10, {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, `${uniqueSuffix}-${file.originalname}`);
         },
       }),
     }),
   )
+  async registrar(
+    @Body() objPubli: Publicacion,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    const imagenesUrls = files.map(file => `/uploads/${file.filename}`);
+    return this.publicacionService.registrar(objPubli, imagenesUrls);
+  }
+
+
   public registrarProducto(
     @Body() objCate: Publicacion,
     @UploadedFile() file: Express.Multer.File,
@@ -87,19 +96,20 @@ export class PublicacionesController {
   ): any {
     const codigo: number = Number(parametros.cod_publicacion);
     if (!isNaN(codigo)) {
-      const imagenUrl = file ? `/uploads/${file.filename}` : undefined;
+      const imagenesUrls = file ? [`/uploads/${file.filename}`] : [];
       return this.publicacionService.actualizar(
         objActualizar,
         codigo,
-        imagenUrl,
+        imagenesUrls,
       );
     } else {
-      return new HttpException(
+      throw new HttpException(
         'Fallo al actualizar la publicación',
         HttpStatus.BAD_REQUEST,
       );
     }
   }
+
 
   @Delete('/delete/:cod_publicacion')
   public borrarProducto(@Param() parametros: any): any {
