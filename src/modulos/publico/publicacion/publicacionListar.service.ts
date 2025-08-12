@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PublicacionesService } from '../../privado/publicaciones/publicaciones.service';
 import { DataSource, Repository } from 'typeorm';
-import { Publicacion } from 'src/modelos/publicacion/publicacion';
+import { Publicacion, TipoVivienda } from 'src/modelos/publicacion/publicacion';
 
 @Injectable()
 export class PublicacionListarService {
@@ -15,32 +15,54 @@ export class PublicacionListarService {
   public listarTodas(): any {
     return this.publicacionesService.consultar();
   }
+  
   public async consultarUno(codigo: number): Promise<any> {
-    try {
-      return this.publicacionesRepository.findBy({ codPublicacion: codigo });
-    } catch (error) {
-      throw new HttpException('Fallo al consultar la publicación', HttpStatus.BAD_REQUEST);
+  try {
+    const publi = await this.publicacionesRepository.findOne({
+      where: { codPublicacion: codigo },
+      relations: ['imagenes'],
+    });
+
+    if (!publi) {
+      throw new HttpException('Publicación no encontrada', HttpStatus.NOT_FOUND);
     }
+
+    return {
+      ...publi,
+      imagenesUrls: publi.imagenes?.map(img => img.urlImagen) || [],
+      imagenUrl: publi.imagenes?.[0]?.urlImagen || null
+    };
+  } catch (error) {
+    throw new HttpException('Fallo al consultar la publicación', HttpStatus.BAD_REQUEST);
   }
+}
+
 
   //Consultar tipo casa
-  async consultarPorTipo(tipoVivienda?: string): Promise<Publicacion[]> {
-    if (!tipoVivienda) return [];
-  
-    // Eliminar espacios en blanco y saltos de línea
-    tipoVivienda = tipoVivienda.trim();
-  
-    const query = this.publicacionesRepository.createQueryBuilder('publicacion')
-      .where("LOWER(publicacion.tipo::TEXT) = LOWER(:tipoVivienda)", { tipoVivienda });
-  
-    console.log('🔍 Consulta SQL generada:', query.getSql());
-    console.log('🔍 Parámetro enviado:', tipoVivienda);
-  
-    const resultado = await query.getMany();
-    console.log('🔍 Resultado de la consulta:', resultado);
-  
-    return resultado;
+ async consultarPorTipo(tipoVivienda?: string): Promise<any[]> {
+  if (!tipoVivienda) return [];
+
+  tipoVivienda = tipoVivienda.trim();
+
+  try {
+    const publicaciones = await this.publicacionesRepository.find({
+      where: { tipo: tipoVivienda as TipoVivienda },
+      relations: ['imagenes'],
+    });
+
+    return publicaciones.map(publi => ({
+      ...publi,
+      imagenesUrls: publi.imagenes?.map(img => img.urlImagen) || [],
+      imagenUrl: publi.imagenes?.[0]?.urlImagen || null,
+    }));
+  } catch (error) {
+    throw new HttpException(
+      'Fallo al consultar publicaciones por tipo',
+      HttpStatus.BAD_REQUEST
+    );
   }
+}
+
   
  
 
