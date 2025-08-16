@@ -12,7 +12,7 @@ import { PublicacionListarService } from './publicacionListar.service';
 export class PublicacionListarController {
   constructor(
     private readonly publicacionListarService: PublicacionListarService,
-  ) {}
+  ) { }
 
   @Get('/publico')
   public listarTodas(): any {
@@ -37,4 +37,10 @@ export class PublicacionListarController {
     console.log('🔍 Tipo de vivienda recibido en la API:', tipoVivienda);
     return this.publicacionListarService.consultarPorTipo(tipoVivienda);
   }
+
+  @Get('/buscar/:titulo')
+  public buscarPorTitulo(@Param('titulo') titulo: string): any {
+    return this.publicacionListarService.buscarPorTitulo(titulo);
+  }
+
 }

@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PublicacionesService } from '../../privado/publicaciones/publicaciones.service';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Like, Repository } from 'typeorm';
 import { Publicacion, TipoVivienda } from 'src/modelos/publicacion/publicacion';
 
 @Injectable()
@@ -62,6 +62,29 @@ export class PublicacionListarService {
     );
   }
 }
+
+async buscarPorTitulo(titulo: string): Promise<any[]> {
+  try {
+    const publicaciones = await this.publicacionesRepository.find({
+      where: {
+        tituloPublicacion: Like(`%${titulo}%`), // <-- LIKE en SQL
+      },
+      relations: ['imagenes'],
+    });
+
+    return publicaciones.map(publi => ({
+      ...publi,
+      imagenesUrls: publi.imagenes?.map(img => img.urlImagen) || [],
+      imagenUrl: publi.imagenes?.[0]?.urlImagen || null,
+    }));
+  } catch (error) {
+    throw new HttpException(
+      'Fallo al buscar publicaciones por título',
+      HttpStatus.BAD_REQUEST
+    );
+  }
+}
+
 
   
  
