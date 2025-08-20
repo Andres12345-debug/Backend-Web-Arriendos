@@ -77,38 +77,40 @@ export class PublicacionesController {
   }
 
   @Put('/update/:cod_publicacion')
-  @UseInterceptors(
-    FileInterceptor('imagen', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `${uniqueSuffix}-${file.originalname}`);
-        },
-      }),
+@UseInterceptors(
+  FileInterceptor('imagen', {
+    storage: diskStorage({
+      destination: './uploads',
+      filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        cb(null, `${uniqueSuffix}-${file.originalname}`);
+      },
     }),
-  )
-  public actualizar(
-    @Body() objActualizar: Publicacion,
-    @Param() parametros: any,
-    @UploadedFile() file?: Express.Multer.File,
-  ): any {
-    const codigo: number = Number(parametros.cod_publicacion);
-    if (!isNaN(codigo)) {
-      const imagenesUrls = file ? [`/uploads/${file.filename}`] : [];
-      return this.publicacionService.actualizar(
-        objActualizar,
-        codigo,
-        imagenesUrls,
-      );
-    } else {
-      throw new HttpException(
-        'Fallo al actualizar la publicación',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  }),
+)
+public async actualizar(
+  @Body() objActualizar: Publicacion,
+  @Param('cod_publicacion') cod_publicacion: string,
+  @UploadedFile() file?: Express.Multer.File,
+): Promise<any> {
+  const codigo = Number(cod_publicacion);
+
+  if (isNaN(codigo)) {
+    throw new HttpException(
+      'Código de publicación inválido',
+      HttpStatus.BAD_REQUEST,
+    );
   }
+
+  let imagenesUrls: string[] | undefined = undefined;
+
+  if (file) {
+    imagenesUrls = [`/uploads/${file.filename}`];
+  }
+
+  return this.publicacionService.actualizar(objActualizar, codigo, imagenesUrls);
+}
+
 
 
   @Delete('/delete/:cod_publicacion')

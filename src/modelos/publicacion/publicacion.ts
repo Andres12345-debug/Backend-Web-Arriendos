@@ -46,23 +46,35 @@ export class Publicacion {
   @Column({ type: 'integer', name: 'parqueadero' })
   public parqueadero: number;
 
+  @Column({ type: 'integer', name: 'periodoAlquiler', nullable: true })
+  public periodoAlquiler: number;
+
   @Column({ type: 'integer', name: 'estrato' })
   public estrato: number;
 
-  @Column({ type: 'integer', name: 'servicios' })
+  @Column({ type: 'integer', name: 'servicios', nullable: true })
   public servicios: number;
 
-  @Column({ type: 'integer', name: 'administracion' })
+  @Column({ type: 'integer', name: 'administracion', nullable: true })
   public administracion: number;
 
-  @Column({ type: 'varchar', length: 250, name: 'metros' })
+  @Column({ type: 'varchar', length: 250, name: 'metros', nullable: true })
   public metros: string;
 
-  @Column({ type: 'integer', name: 'habitaciones' })
+  @Column({ type: 'varchar', length: 250, name: 'direccion', nullable: true })
+  public direccion: string;
+
+  @Column({ type: 'integer', name: 'habitaciones', nullable: true })
   public habitaciones: number;
 
   @Column({ type: 'integer', name: 'banios' })
   public banios: number;
+
+  @Column({ type: 'integer', name: 'precios', nullable: true })
+  public precio: number;
+
+
+
 
   @Column({ type: 'date', nullable: false, name: 'fecha_creacion_publicacion' })
   public fechaCreacionPublicacion: Date;
@@ -81,8 +93,8 @@ export class Publicacion {
 
 
   //Recibo de imagen
-// Relación con imágenes de publicaciones
-@OneToMany(() => ImagenesPublicaciones, (imagen) => imagen.publicacion)
-public imagenes?: ImagenesPublicaciones[];
-  
+  // Relación con imágenes de publicaciones
+  @OneToMany(() => ImagenesPublicaciones, (imagen) => imagen.publicacion)
+  public imagenes?: ImagenesPublicaciones[];
+
 }

@@ -105,7 +105,7 @@ public async registrar(objPubli: Publicacion, imagenesUrls: string | string[]): 
 
   
 
-  public async actualizar(objPubli: Publicacion, codigo: number, imagenesUrls?: string[]): Promise<any> {
+public async actualizar(objPubli: Publicacion, codigo: number, imagenesUrls?: string[]): Promise<any> {
   try {
     const publicacionExistente = await this.publicacionesRepository.findOne({
       where: { codPublicacion: codigo },
@@ -116,27 +116,34 @@ public async registrar(objPubli: Publicacion, imagenesUrls: string | string[]): 
       throw new HttpException("La publicación no existe", HttpStatus.NOT_FOUND);
     }
 
-    // Actualizar datos básicos
-    await this.publicacionesRepository.update({ codPublicacion: codigo }, objPubli);
+    // Normalizar título si viene
+    if (objPubli.tituloPublicacion) {
+      objPubli.tituloPublicacion = objPubli.tituloPublicacion.trim().toLowerCase();
+    }
 
-    // Si hay nuevas imágenes, agregarlas
-    if (imagenesUrls && imagenesUrls.length > 0) {
+    // Mezclar cambios
+    this.publicacionesRepository.merge(publicacionExistente, objPubli);
+    const publicacionActualizada = await this.publicacionesRepository.save(publicacionExistente);
+
+    // Manejar imágenes
+    if (imagenesUrls) {
       const imagenesRepo = this.poolConexion.getRepository(ImagenesPublicaciones);
+
+      // 🔹 Si quieres reemplazar completamente las imágenes:
+      await imagenesRepo.delete({ publicacion: { codPublicacion: codigo } });
+
       const nuevasImagenes = imagenesUrls.map(url => {
         const img = new ImagenesPublicaciones();
         img.urlImagen = url;
-        img.publicacion = publicacionExistente;
+        img.publicacion = publicacionActualizada;
         return img;
       });
+
       await imagenesRepo.save(nuevasImagenes);
+      publicacionActualizada.imagenes = nuevasImagenes;
     }
 
-    const actualizada = await this.publicacionesRepository.findOne({
-      where: { codPublicacion: codigo },
-      relations: ['imagenes'],
-    });
-
-    return { mensaje: "Publicación actualizada", objeto: actualizada };
+    return { mensaje: "Publicación actualizada", objeto: publicacionActualizada };
   } catch (error) {
     throw new HttpException(
       error.message || "Fallo al actualizar la publicación",
