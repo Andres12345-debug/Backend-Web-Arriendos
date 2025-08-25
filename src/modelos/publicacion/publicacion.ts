@@ -18,6 +18,12 @@ export enum TipoVivienda {
   HABITACION = 'Habitacion',
 }
 
+export enum TipoPublicacion {
+  ARRIENDO = 'Arriendo',
+  VENTA = 'Venta',
+}
+
+
 @Entity('publicaciones', { schema: 'public' })
 export class Publicacion {
   @PrimaryGeneratedColumn({ type: 'integer', name: 'cod_publicacion' })
@@ -48,6 +54,9 @@ export class Publicacion {
 
   @Column({ type: 'integer', name: 'periodoAlquiler', nullable: true })
   public periodoAlquiler: number;
+
+  @Column({ type: 'varchar', name: 'contactoWhatsapp', nullable: true })
+  public contactoWhatsapp: string;
 
   @Column({ type: 'integer', name: 'estrato' })
   public estrato: number;
@@ -90,6 +99,10 @@ export class Publicacion {
   //Enum para tipo de vivienda
   @Column({ type: 'enum', enum: TipoVivienda, default: TipoVivienda.CASA })
   tipo: TipoVivienda;
+
+    //Enum para tipo de Publicacion
+  @Column({ type: 'enum', enum: TipoPublicacion, default: TipoPublicacion.ARRIENDO })
+  tipoPublicion: TipoPublicacion;
 
 
   //Recibo de imagen

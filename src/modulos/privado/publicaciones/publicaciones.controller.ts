@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  Req,
   UploadedFile,
   UploadedFiles,
   UseInterceptors,
@@ -26,6 +27,16 @@ export class PublicacionesController {
   public obtenerProductos(): any {
     return this.publicacionService.consultar();
   }
+
+  //Para listar publicaciones por perfil
+  @Get('/mis-publicaciones')
+  public async obtenerMisPublicaciones(@Req() req: Request): Promise<any> {
+    const datosUsuario = (req as any).datosUsuario;
+    console.log("👉 Usuario logueado:", datosUsuario);
+
+    return this.publicacionService.consultarPorUsuario(datosUsuario.id);
+  }
+
 
   @Post('/agregar')
   @UseInterceptors(
@@ -46,7 +57,6 @@ export class PublicacionesController {
     const imagenesUrls = files.map(file => `/uploads/${file.filename}`);
     return this.publicacionService.registrar(objPubli, imagenesUrls);
   }
-
 
   public registrarProducto(
     @Body() objCate: Publicacion,
@@ -77,8 +87,8 @@ export class PublicacionesController {
   }
 
   @Put('/update/:cod_publicacion')
-@UseInterceptors(
-  FileInterceptor('imagen', {
+  @UseInterceptors(
+  FilesInterceptor('imagenes', 5, { // máximo 5 archivos
     storage: diskStorage({
       destination: './uploads',
       filename: (req, file, cb) => {
@@ -91,24 +101,13 @@ export class PublicacionesController {
 public async actualizar(
   @Body() objActualizar: Publicacion,
   @Param('cod_publicacion') cod_publicacion: string,
-  @UploadedFile() file?: Express.Multer.File,
+  @UploadedFiles() files?: Express.Multer.File[], // 👈 cambia aquí también
 ): Promise<any> {
-  const codigo = Number(cod_publicacion);
-
-  if (isNaN(codigo)) {
-    throw new HttpException(
-      'Código de publicación inválido',
-      HttpStatus.BAD_REQUEST,
-    );
+  let imagenesUrls: string[] | undefined;
+  if (files && files.length > 0) {
+    imagenesUrls = files.map(f => `/uploads/${f.filename}`);
   }
-
-  let imagenesUrls: string[] | undefined = undefined;
-
-  if (file) {
-    imagenesUrls = [`/uploads/${file.filename}`];
-  }
-
-  return this.publicacionService.actualizar(objActualizar, codigo, imagenesUrls);
+  return this.publicacionService.actualizar(objActualizar, +cod_publicacion, imagenesUrls);
 }
 
 
